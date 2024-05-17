@@ -4,7 +4,12 @@
     <div class="recorder_wrapper">
       <div class="recorder">
         <label class="record_btn file" for="file"> </label>
-        <input id="file" type="file" @change="selectFile" />
+        <input
+          id="file"
+          type="file"
+          @change="selectFile"
+          accept=".webm,.weba,audio/webm,audio/weba"
+        />
       </div>
     </div>
     <div>
@@ -14,9 +19,12 @@
 </template>
 
 <script>
+import { googleSpeechToText } from "@/api";
+
 export default {
   data() {
     return {
+      soundExtensions: ["audio/webm", "audio/weba"],
       file: null,
       transcription: "",
     };
@@ -24,7 +32,10 @@ export default {
   methods: {
     async selectFile(e) {
       this.file = e.target.files[0];
-      this.convertToBase64();
+      console.log(this.file);
+      if (this.soundExtensions.includes(this.file.type)) this.convertToBase64();
+      else
+        this.transcription = "Please choose a file with weba or webm extension";
     },
     convertToBase64() {
       const reader = new FileReader();
@@ -36,39 +47,7 @@ export default {
     },
 
     async sendToGoogleSpeechToText(base64Data) {
-      const apiKey = process.env.VUE_APP_GOOGLE_SPEECH_API_KEY;
-
-      const body = {
-        audio: {
-          content: base64Data,
-        },
-        config: {
-          enableAutomaticPunctuation: true,
-          encoding: "LINEAR16",
-          languageCode: "en-US",
-          model: "default",
-        },
-      };
-      try {
-        const response = await fetch(
-          `https://speech.googleapis.com/v1/speech:recognize?key=${apiKey}`,
-          {
-            method: "POST",
-            body: JSON.stringify(body),
-          }
-        );
-
-        if (!response.ok) {
-          console.log(response);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        this.transcription = data.results;
-      } catch (error) {
-        console.error("Error:", error.message);
-        this.transcription = error.message;
-      }
+      this.transcription = await googleSpeechToText(base64Data);
     },
   },
   mounted() {},

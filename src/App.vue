@@ -1,6 +1,6 @@
 <template>
   <main class="flex">
-    <FileToText />>
+    <FileToText />
 
     <SpeechToText />
   </main>

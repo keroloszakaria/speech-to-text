@@ -24,6 +24,8 @@
 </template>
 
 <script>
+import { googleSpeechToText } from "@/api";
+
 export default {
   data() {
     return {
@@ -56,40 +58,8 @@ export default {
         this.sendToGoogleSpeechToText(base64String);
       };
     },
-    async sendToGoogleSpeechToText(base64String) {
-      const apiKey = process.env.VUE_APP_GOOGLE_SPEECH_API_KEY;
-
-      const body = {
-        audio: {
-          content: base64String,
-        },
-        config: {
-          enableAutomaticPunctuation: true,
-          encoding: "LINEAR16",
-          languageCode: "en-US",
-          model: "default",
-        },
-      };
-      try {
-        const response = await fetch(
-          `https://speech.googleapis.com/v1/speech:recognize?key=${apiKey}`,
-          {
-            method: "POST",
-            body: JSON.stringify(body),
-          }
-        );
-
-        if (!response.ok) {
-          console.log(response);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        this.transcription = data.results;
-      } catch (error) {
-        console.error("Error:", error.message);
-        this.transcription = error.message;
-      }
+    async sendToGoogleSpeechToText(base64Data) {
+      this.transcription = await googleSpeechToText(base64Data);
     },
     stopRecording() {
       this.recorder.stop();
